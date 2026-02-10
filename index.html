@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<meta charset="UTF-8">
+<title>Sustainable Learning Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #a8d5f2 0%, #c4e4fc 50%, #e0f2fe 100%);
+    min-height: 100vh;
+    padding: 15px;
+}
+.container { max-width: 1400px; margin: auto; }
+header { 
+    background: white; 
+    padding: 15px; 
+    border-radius: 20px; 
+    text-align: center; 
+    margin-bottom: 12px; 
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
+}
+header h1 { 
+    color: #1f2937; 
+    margin: 0 0 4px 0; 
+    font-size: 2.2em;
+}
+header .subtitle {
+    color: #6b7280;
+    margin: 0;
+    font-size: 1em;
+    font-weight: 500;
+}
+
+.section { 
+    background: white; 
+    padding: 15px; 
+    border-radius: 20px; 
+    margin-bottom: 12px; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+}
+
+/* TIME MANAGEMENT - FIXED NO OVERFLOW */
+
+.time-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+    align-items: end;
+}
+
+/* Important: allows grid children to shrink properly */
+.time-box {
+    background: #f8fafc; 
+    padding: 18px;
+    border-radius: 16px; 
+    text-align: center;
+    border: 2px solid #e2e8f0;
+    transition: all 0.3s ease;
+
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;   /* 🔥 prevents overflow in CSS grid */
+}
+
+.time-box:hover { 
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.time-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.time-label span.required { 
+    color: #dc2626; 
+}
+
+/* INPUT FIX */
+.time-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 14px;
+    text-align: center;
+    background: #ffffff;
+    transition: all 0.3s ease;
+
+    box-sizing: border-box;  /* 🔥 CRITICAL */
+    max-width: 100%;
+}
+
+.time-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+}
+
+
+/* OTHER INPUT SECTIONS */
+.grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 8px;
+    align-items: end;
+}
+.box { 
+    background: #f8fafc; 
+    padding: 15px;
+    border-radius: 16px; 
+    text-align: center;
+    border: 2px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+.box:hover { 
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+label { 
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    display: block;
+    margin-bottom: 3px;
+}
+label span.required { color: #dc2626; }
+input[type="range"] {
+    width: 100%;
+    height: 12px;
+    border-radius: 6px;
+    background: linear-gradient(to right, #10b981 var(--value), #d1fae5 var(--value));
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #10b981;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(16,185,129,0.4);
+}
+select,
+input[type="number"],
+input[type="text"] {
+    width: 100%;
+    padding: 7px 9px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 14px;
+    background: white;
+    transition: all 0.3s ease;
+}
+select:focus,
+input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+}
+.range-value {
+    font-weight: bold;
+    color: #10b981;
+    font-size: 16px;
+    margin-top: 2px;
+}
+
+/* 24HR VALIDATION */
+.total-time {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 3px solid #f59e0b;
+    padding: 15px;
+    border-radius: 16px;
+    text-align: center;
+    margin-bottom: 12px;
+}
+.total-time h3 {
+    font-size: 1.4em;
+    margin: 0 0 6px 0;
+}
+.total-display {
+    font-size: 42px;
+    font-weight: bold;
+    color: #b45309;
+    margin: 6px 0;
+}
+.total-warning {
+    color: #92400e;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* SMALL SAVE BUTTON */
+.save-btn {
+    width: auto;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    background: linear-gradient(135deg, #10b981, #059669, #047857);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 6px 20px rgba(16,185,129,0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin: 20px auto 0;
+}
+.save-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(16,185,129,0.5);
+}
+.save-btn:disabled {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 3px 10px rgba(220,38,38,0.3);
+}
+
+/* ERROR */
+.error-message {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    color: #dc2626;
+    padding: 12px;
+    border-radius: 16px;
+    border-left: 6px solid #dc2626;
+    margin-bottom: 12px;
+}
+.error-message h3 {
+    font-size: 1.3em;
+    margin: 0 0 8px 0;
+}
+
+@media (max-width: 768px) {
+    .time-grid { grid-template-columns: 1fr; gap: 6px; }
+    header h1 { font-size: 2em; }
+    .section h2 { font-size: 1.4em; }
+    .grid { grid-template-columns: 1fr; gap: 6px; }
+    .box { padding: 6px; }
+    .time-box { padding: 6px; }
+    .save-btn { 
+        padding: 8px 16px; 
+        font-size: 14px; 
+    }
+    body { padding: 4px; }
+    header, .section { padding: 8px; margin-bottom: 8px; }
+    .section.compact { padding: 6px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>🌱 Sustainable Learning Dashboard</h1>
+        <p class="subtitle">Track academic load, mental state & recovery</p>
+    </header>
+
+    <form action="/" method="POST">
+        {% if error_message %}
+        <div class="error-message">
+            <h3>⚠️ Validation Error</h3>
+            <p>{{ error_message }}</p>
+        </div>
+        {% endif %}
+
+        <!-- 24HR TOTAL TIME VALIDATION -->
+        <div class="total-time">
+            <h3>⏰ Total Time Used</h3>
+            <div class="total-display" id="totalTime">0:00</div>
+            <div class="total-warning" id="totalWarning">24.0 hrs remaining</div>
+        </div>
+
+        <!-- TIME MANAGEMENT - HORIZONTAL LAYOUT LIKE ACADEMIC LOAD -->
+        <div class="section compact">
+            <h2>🕐 Time Management</h2>
+            <div class="time-grid">
+                <div class="time-box">
+                    <label class="time-label">Planned Study Time</label>
+                    <input type="number" class="time-input" min="0" max="24" step="0.5" 
+                           name="planned_study_time" required placeholder="0">
+                </div>
+                <div class="time-box">
+                    <label class="time-label">Actual Study Time <span class="required">*</span></label>
+                    <input type="number" class="time-input" min="0" max="24" step="0.5" 
+                           name="actual_study_time" id="actual" required placeholder="0">
+                </div>
+                <div class="time-box">
+                    <label class="time-label">Break Time <span class="required">*</span></label>
+                    <input type="number" class="time-input" min="0" max="24" step="0.5" 
+                           name="break_time" id="break" required placeholder="0">
+                </div>
+                <div class="time-box">
+                    <label class="time-label">Personal Care <span class="required">*</span></label>
+                    <input type="number" class="time-input" min="0" max="24" step="0.5" 
+                           name="personal_care" id="care" required placeholder="0">
+                </div>
+            </div>
+        </div>
+
+        <!-- ACADEMIC LOAD -->
+        <div class="section">
+            <h2>📚 Academic Load</h2>
+            <div class="grid">
+                <div class="box">
+                    <label>Active Tasks <span class="required">*</span></label>
+                    <select name="active_tasks" required>
+                        <option value="">Select...</option>
+                        <option value="0">0 - None</option>
+                        <option value="1">1 - Minimal</option>
+                        <option value="2">2 - Light</option>
+                        <option value="3">3 - Moderate</option>
+                        <option value="4">4 - Heavy</option>
+                        <option value="5">5+ - Overloaded</option>
+                    </select>
+                </div>
+                <div class="box">
+                    <label>Deadlines/Week <span class="required">*</span></label>
+                    <select name="deadlines" required>
+                        <option value="">Select...</option>
+                        <option value="0">0 - None</option>
+                        <option value="1">1 - Relaxed</option>
+                        <option value="2">2 - Normal</option>
+                        <option value="3">3 - Busy</option>
+                        <option value="4">4 - Pressure</option>
+                        <option value="5">5+ - Critical</option>
+                    </select>
+                </div>
+                <div class="box">
+                    <label>Context Switching <span class="required">*</span></label>
+                    <select name="context_switches" required>
+                        <option value="">Select...</option>
+                        <option value="0">0 - Single focus</option>
+                        <option value="1">1 - Minimal</option>
+                        <option value="2">2 - Moderate</option>
+                        <option value="3">3 - Frequent</option>
+                        <option value="4">4 - Heavy</option>
+                        <option value="5">5+ - Chaotic</option>
+                    </select>
+                </div>
+                <div class="box">
+                    <label>Task Complexity</label>
+                    <input type="text" name="task_complexity" placeholder="e.g., Advanced calculus, Basic notes...">
+ <div class="input-wrapper">
+        
+                </div>
+            </div>
+        </div>
+
+        <!-- MENTAL STATE -->
+        <div class="section">
+            <h2>🧠 Mental State (0-5)</h2>
+            <div class="grid">
+                <div class="box">
+                    <label>Stress <span class="required">*</span></label>
+                    <input type="range" min="0" max="5" step="0.5" name="stress" id="stress">
+                    <div class="range-value" id="stressVal">0/5</div>
+                </div>
+                <div class="box">
+                    <label>Fatigue <span class="required">*</span></label>
+                    <input type="range" min="0" max="5" step="0.5" name="fatigue" id="fatigue">
+                    <div class="range-value" id="fatigueVal">0/5</div>
+                </div>
+                <div class="box">
+                    <label>Exhaustion <span class="required">*</span></label>
+                    <input type="range" min="0" max="5" step="0.5" name="exhaustion" id="exhaustion">
+                    <div class="range-value" id="exhaustionVal">0/5</div>
+                </div>
+                <div class="box">
+                    <label>Motivation <span class="required">*</span></label>
+                    <input type="range" min="0" max="5" step="0.5" name="motivation" id="motivation">
+                    <div class="range-value" id="motivationVal">0/5</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RECOVERY & BALANCE -->
+        <div class="section compact">
+            <h2>💤 Recovery & Balance</h2>
+            <div class="grid">
+                <div class="box">
+                    <label>Sleep Duration (hrs) <span class="required">*</span></label>
+                    <input type="number" name="sleep_duration" min="0" max="24" step="0.5" placeholder="7.5">
+                </div>
+                <div class="box">
+                    <label>Sleep Quality</label>
+                    <input type="text" name="sleep_quality" placeholder="Deep, Interrupted, Poor...">
+                </div>
+                <div class="box">
+                    <label>Holidays/Month</label>
+                    <input type="number" name="holidays" min="0" placeholder="2">
+                </div>
+                <div class="box">
+                    <label>Micro Breaks <span class="required">*</span></label>
+                    <input type="number" name="micro_breaks" min="0" placeholder="3">
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="save-btn" id="saveBtn">💾 Save</button>
+    </form>
+</div>
+
+<script>
+// LIVE TIME VALIDATION (24hr constraint)
+function updateTotalTime() {
+    const actual = parseFloat(document.getElementById('actual')?.value) || 0;
+    const brk = parseFloat(document.getElementById('break')?.value) || 0;
+    const care = parseFloat(document.getElementById('care')?.value) || 0;
+    const sleep = parseFloat(document.querySelector('input[name="sleep_duration"]')?.value) || 0;
+    
+    const totalUsed = actual + brk + care + sleep;
+    const remaining = Math.max(0, 24 - totalUsed);
+    
+    const hours = Math.floor(remaining);
+    const minutes = Math.floor((remaining * 60) % 60);
+    document.getElementById('totalTime').textContent = 
+        totalUsed > 24 ? 'OVER' : `${hours}:${minutes.toString().padStart(2, '0')}`;
+    
+    document.getElementById('totalWarning').textContent = 
+        totalUsed > 24 ? `${(totalUsed-24).toFixed(1)} hrs OVER` : `${remaining.toFixed(1)} hrs remaining`;
+    
+    const saveBtn = document.getElementById('saveBtn');
+    if (totalUsed > 24) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = '❌ OVER';
+    } else {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 Save';
+    }
+}
+
+// ONLY TOTAL TIME LISTENERS
+document.querySelector('input[name="sleep_duration"]')?.addEventListener('input', updateTotalTime);
+['actual', 'break', 'care'].forEach(id => {
+    const input = document.getElementById(id);
+    input?.addEventListener('input', updateTotalTime);
+});
+
+// RANGE SLIDERS
+['stress', 'fatigue', 'exhaustion', 'motivation'].forEach(id => {
+    const slider = document.getElementById(id);
+    const val = document.getElementById(id + 'Val');
+    slider?.addEventListener('input', () => {
+        val.textContent = `${slider.value}/5`;
+        const percent = (slider.value / 5) * 100;
+        slider.style.setProperty('--value', percent + '%');
+    });
+});
+</script>
+</body>
+</html>
